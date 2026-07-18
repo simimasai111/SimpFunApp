@@ -29,8 +29,8 @@ public class StepConfirmFragment extends Fragment {
 
         ((TextView) v.findViewById(R.id.tv_game)).setText(nz(a.selGameName));
         ((TextView) v.findViewById(R.id.tv_ver)).setText(nz(a.selVersionName));
-        ((TextView) v.findViewById(R.id.tv_spec)).setText(nz(a.selItemName));
-        ((TextView) v.findViewById(R.id.tv_price)).setText(nz(a.selItemPrice));
+        ((TextView) v.findViewById(R.id.tv_spec)).setText(nz(a.selSpecName));
+        ((TextView) v.findViewById(R.id.tv_price)).setText("—"); // 价格在规格步骤已展示
 
         etName = v.findViewById(R.id.et_name);
         if (a.selName != null) etName.setText(a.selName);

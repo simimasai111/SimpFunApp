@@ -28,7 +28,7 @@ import java.util.List;
 
 /**
  * 第一栏：服务器管理
- * 列表 GET /api/ins/list；点击实例进入详情（终端/文件/备份/设置）；右下角 FAB 创建实例。
+ * 真实 API: GET /api/ins/list → {code:200, list:[{id, name, cpu, ram, disk, state, ptero_id, version_id, area, ...}]}
  */
 public class ServerFragment extends Fragment {
     private ListView listView;
@@ -36,9 +36,6 @@ public class ServerFragment extends Fragment {
     private Button btnRefresh;
     private final List<Instance> instances = new ArrayList<>();
     private ArrayAdapter<Instance> adapter;
-
-    public ServerFragment() {
-    }
 
     @Override
     public View onCreateView(LayoutInflater inf, ViewGroup vg, Bundle s) {
@@ -58,9 +55,9 @@ public class ServerFragment extends Fragment {
                     TextView tvStatus = v.findViewById(R.id.tv_item_status);
                     TextView tvVer = v.findViewById(R.id.tv_item_version);
                     tvName.setText(it.displayName());
-                    tvStatus.setText(it.status.isEmpty() ? "未知状态" : it.status);
-                    tvStatus.setTextColor(statusColor(it.status));
-                    tvVer.setText(it.version.isEmpty() ? "" : it.version);
+                    tvStatus.setText(it.stateText());
+                    tvStatus.setTextColor(statusColor(it.state));
+                    tvVer.setText(it.configSummary());
                 }
                 return v;
             }
@@ -81,30 +78,28 @@ public class ServerFragment extends Fragment {
     }
 
     private void openDetail(Instance ins) {
-        if (ins.id.isEmpty()) {
+        if (ins.id <= 0) {
             Toast.makeText(getContext(), "实例 ID 缺失，无法进入", Toast.LENGTH_SHORT).show();
             return;
         }
         Intent it = new Intent(requireContext(), InstanceDetailActivity.class);
-        it.putExtra(InstanceDetailActivity.EXTRA_INS_ID, ins.id);
+        it.putExtra(InstanceDetailActivity.EXTRA_INS_ID, String.valueOf(ins.id));
         it.putExtra(InstanceDetailActivity.EXTRA_INS_NAME, ins.displayName());
+        it.putExtra("extra_ptero_id", ins.pteroId);
         startActivity(it);
     }
 
-    private int statusColor(String status) {
-        int c = requireContext().getColor(R.color.status_stopped);
-        if (status == null) return c;
-        switch (status.toLowerCase()) {
-            case "running":
-                return requireContext().getColor(R.color.status_running);
-            case "starting":
-            case "installing":
-                return requireContext().getColor(R.color.status_starting);
-            case "stopped":
-            case "offline":
-                return requireContext().getColor(R.color.status_stopped);
-            default:
-                return c;
+    private int statusColor(int state) {
+        // 0=离线(红), 1=启动中(黄), 2=运行中(绿), 3=停止中(橙)
+        try {
+            switch (state) {
+                case 2: return requireContext().getColor(R.color.status_running);   // 绿
+                case 1: return requireContext().getColor(R.color.status_starting); // 黄
+                case 3: return requireContext().getColor(R.color.status_starting); // 橙
+                default: return requireContext().getColor(R.color.status_stopped); // 红
+            }
+        } catch (Exception e) {
+            return 0xFFE53935; // 默认红
         }
     }
 
@@ -113,14 +108,15 @@ public class ServerFragment extends Fragment {
         ApiClient.listInstances(new ApiClient.ApiCallback() {
             @Override
             public void onSuccess(JSONObject resp) {
-                JSONArray arr = toArray(resp.opt("data"));
+                // ⭐ 关键修复: 真实响应字段是 "list" 不是 "data"
+                JSONArray arr = resp.optJSONArray("list");
+                if (arr == null) arr = resp.optJSONArray("data"); // 兼容 fallback
                 instances.clear();
                 if (arr != null) {
                     for (int i = 0; i < arr.length(); i++) {
                         try {
                             instances.add(Instance.from(arr.getJSONObject(i)));
-                        } catch (Exception ignore) {
-                        }
+                        } catch (Exception ignore) {}
                     }
                 }
                 requireActivity().runOnUiThread(() -> {
@@ -139,16 +135,5 @@ public class ServerFragment extends Fragment {
                 });
             }
         });
-    }
-
-    private JSONArray toArray(Object d) {
-        if (d instanceof JSONArray) return (JSONArray) d;
-        if (d instanceof JSONObject) {
-            JSONObject o = (JSONObject) d;
-            for (String k : new String[]{"list", "ins", "data", "instances", "servers", "items"}) {
-                if (o.optJSONArray(k) != null) return o.optJSONArray(k);
-            }
-        }
-        return null;
     }
 }

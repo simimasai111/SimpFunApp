@@ -35,7 +35,7 @@ public class CreateInstanceActivity extends AppCompatActivity {
     public String selGameId, selGameName;
     public String selKindId, selKindName;
     public String selVersionId, selVersionName;
-    public String selItemId, selItemName, selItemPrice;
+    public String selSpecId, selSpecName;   // ⭐ 规格ID = shop/list 的 id = 提交时的 item_id
     public String selName;
 
     private static final int TOTAL = 4;
@@ -116,7 +116,7 @@ public class CreateInstanceActivity extends AppCompatActivity {
                 }
                 break;
             case 2:
-                if (selItemId == null || selItemId.isEmpty()) {
+                if (selSpecId == null || selSpecId.isEmpty()) {
                     toast("请选择一个规格");
                     return false;
                 }
@@ -138,9 +138,10 @@ public class CreateInstanceActivity extends AppCompatActivity {
         btnPrev.setEnabled(false);
 
         Map<String, String> p = new HashMap<>();
-        p.put("item_id", selItemId);
+        // ⭐ 真实提交参数: item_id(规格ID) + version_id + name
+        p.put("item_id", selSpecId);
         p.put("version_id", selVersionId);
-        p.put("name", name);
+        if (!name.isEmpty()) p.put("name", name);
 
         ApiClient.createInstance(p, new ApiClient.ApiCallback() {
             @Override

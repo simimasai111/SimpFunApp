@@ -19,8 +19,8 @@ import androidx.fragment.app.Fragment;
 
 import com.simpfun.app.R;
 import com.simpfun.app.api.ApiClient;
+import com.simpfun.app.model.Game;
 import com.simpfun.app.model.SelectItem;
-import com.simpfun.app.util.Json;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -28,7 +28,15 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-/** 步骤 2：选择分类 + 版本 */
+/**
+ * 步骤 3：选择服务端 + 版本（联动）
+ * - 先选游戏(Step2)→ 加载 kindlist(?game_id) 显示服务端
+ * - 再选服务端→ 加载 versionlist(?kind_id) 显示版本
+ *
+ * 真实 API:
+ *   GET /api/games/kindlist?game_id=X → {code:200, list:[{id, name, description, ...}]}
+ *   GET /api/games/versionlist?kind_id=X → {code:200, list:[{id, name, description, ...}], is_windows}
+ */
 public class StepVersionFragment extends Fragment {
     private Spinner spKind;
     private Spinner spVer;
@@ -70,15 +78,12 @@ public class StepVersionFragment extends Fragment {
                 a.selKindName = k.title;
                 a.selVersionId = null;
                 a.selVersionName = null;
-                a.selItemId = null;
-                a.selItemName = null;
-                a.selItemPrice = null;
+                a.selSpecId = null; // 清空下游选择
                 loadVersions(k.id);
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
+            public void onNothingSelected(AdapterView<?> parent) {}
         });
 
         spVer.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -89,49 +94,51 @@ public class StepVersionFragment extends Fragment {
                 CreateInstanceActivity a = (CreateInstanceActivity) requireActivity();
                 a.selVersionId = ver.id;
                 a.selVersionName = ver.title;
-                a.selItemId = null;
-                a.selItemName = null;
-                a.selItemPrice = null;
+                a.selSpecId = null;
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
+            public void onNothingSelected(AdapterView<?> parent) {}
         });
 
-        loadKinds();
+        // 如果已有游戏 ID，加载服务端列表；否则提示先选游戏
+        CreateInstanceActivity act = (CreateInstanceActivity) requireActivity();
+        if (act.selGameId != null && !act.selGameId.isEmpty()) {
+            loadKinds();
+        } else {
+            pb.setVisibility(View.GONE);
+            llForm.setVisibility(View.VISIBLE);
+        }
         return v;
     }
 
+    /** 加载服务端/类别列表 (kindlist) */
     private void loadKinds() {
         pb.setVisibility(View.VISIBLE);
         llForm.setVisibility(View.GONE);
-        final CreateInstanceActivity a = (CreateInstanceActivity) requireActivity();
+        CreateInstanceActivity a = (CreateInstanceActivity) requireActivity();
         ApiClient.getGameKinds(a.selGameId, new ApiClient.ApiCallback() {
             @Override
             public void onSuccess(JSONObject resp) {
+                // ⭐ 真实响应: list 数组，每项 {id, name, description, pic_path}
+                JSONArray arr = resp.optJSONArray("list");
+                if (arr == null) arr = resp.optJSONArray("data"); // 兼容
                 kinds.clear();
-                JSONArray arr = Json.toArray(resp.opt("data"));
                 if (arr != null) {
                     for (int i = 0; i < arr.length(); i++) {
                         try {
-                            JSONObject o = arr.getJSONObject(i);
-                            String id = Json.pick(o, "kind_id", "id", "gid");
-                            String name = Json.pick(o, "kind_name", "name", "title", "category");
-                            kinds.add(new SelectItem(id, name, ""));
-                        } catch (Exception ignore) {
-                        }
+                            Game g = Game.from(arr.getJSONObject(i));
+                            String sub = g.description.isEmpty() ? "" : g.description;
+                            kinds.add(new SelectItem(String.valueOf(g.id), g.name, sub));
+                        } catch (Exception ignore) {}
                     }
                 }
                 requireActivity().runOnUiThread(() -> {
                     kindAdapter.notifyDataSetChanged();
-                    // 还原已选分类
                     int sel = -1;
+                    CreateInstanceActivity a = (CreateInstanceActivity) requireActivity();
                     for (int i = 0; i < kinds.size(); i++) {
-                        if (kinds.get(i).id.equals(a.selKindId)) {
-                            sel = i;
-                            break;
-                        }
+                        if (kinds.get(i).id.equals(a.selKindId)) { sel = i; break; }
                     }
                     pb.setVisibility(View.GONE);
                     llForm.setVisibility(View.VISIBLE);
@@ -140,7 +147,6 @@ public class StepVersionFragment extends Fragment {
                         spKind.setSelection(sel);
                         loadVersions(a.selKindId);
                     }
-                    // 恢复完成后允许用户手动切换分类
                     kindUserPicking = true;
                 });
             }
@@ -149,12 +155,13 @@ public class StepVersionFragment extends Fragment {
             public void onError(String e) {
                 requireActivity().runOnUiThread(() -> {
                     pb.setVisibility(View.GONE);
-                    Toast.makeText(getContext(), e, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "加载服务端失败: " + e, Toast.LENGTH_SHORT).show();
                 });
             }
         });
     }
 
+    /** 加载版本列表 (versionlist) */
     private void loadVersions(String kindId) {
         if (kindId == null || kindId.isEmpty()) return;
         verUserPicking = false;
@@ -163,17 +170,18 @@ public class StepVersionFragment extends Fragment {
         ApiClient.getGameVersions(kindId, new ApiClient.ApiCallback() {
             @Override
             public void onSuccess(JSONObject resp) {
-                JSONArray arr = Json.toArray(resp.opt("data"));
+                // ⭐ 真实响应: list 数组，每项 {id, name, description, priority}
+                JSONArray arr = resp.optJSONArray("list");
+                if (arr == null) arr = resp.optJSONArray("data");
                 if (arr != null) {
                     for (int i = 0; i < arr.length(); i++) {
                         try {
                             JSONObject o = arr.getJSONObject(i);
-                            String id = Json.pick(o, "version_id", "id", "vid");
-                            String name = Json.pick(o, "version_name", "name", "title", "version");
-                            String sub = Json.pick(o, "version", "version_name");
-                            vers.add(new SelectItem(id, name, sub));
-                        } catch (Exception ignore) {
-                        }
+                            String id = o.optString("id", "");
+                            String name = o.optString("name", "");
+                            String desc = o.optString("description", "");
+                            vers.add(new SelectItem(id, name, desc));
+                        } catch (Exception ignore) {}
                     }
                 }
                 requireActivity().runOnUiThread(() -> {
@@ -181,10 +189,7 @@ public class StepVersionFragment extends Fragment {
                     CreateInstanceActivity a = (CreateInstanceActivity) requireActivity();
                     int sel = -1;
                     for (int i = 0; i < vers.size(); i++) {
-                        if (vers.get(i).id.equals(a.selVersionId)) {
-                            sel = i;
-                            break;
-                        }
+                        if (vers.get(i).id.equals(a.selVersionId)) { sel = i; break; }
                     }
                     if (sel >= 0) {
                         verUserPicking = false;
@@ -197,9 +202,14 @@ public class StepVersionFragment extends Fragment {
             @Override
             public void onError(String e) {
                 requireActivity().runOnUiThread(() ->
-                        Toast.makeText(getContext(), e, Toast.LENGTH_SHORT).show());
+                        Toast.makeText(getContext(), "加载版本失败: " + e, Toast.LENGTH_SHORT).show());
             }
         });
         verUserPicking = true;
+    }
+
+    /** 暴露给 Activity: 保存当前选择 */
+    public void saveSelection() {
+        // Spinner 选择通过 onItemSelectedListener 已自动保存到 Activity 字段
     }
 }

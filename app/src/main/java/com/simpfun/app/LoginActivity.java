@@ -68,11 +68,15 @@ public class LoginActivity extends AppCompatActivity {
         ApiClient.post("/api/auth/login", p, new ApiClient.ApiCallback() {
             @Override
             public void onSuccess(JSONObject resp) {
-                JSONObject data = resp.optJSONObject("data");
-                String token = data != null ? data.optString("token", "") : "";
-                if (token.isEmpty()) token = resp.optString("token", "");
+                // ⭐ 真实响应: {code:200, msg:"登录成功", "token":"..."} — token 在根级别
+                String token = resp.optString("token", "");
                 if (token.isEmpty()) {
-                    onError("登录成功但未获取到 token");
+                    // 兼容: 尝试 data.token
+                    JSONObject data = resp.optJSONObject("data");
+                    token = data != null ? data.optString("token", "") : "";
+                }
+                if (token.isEmpty()) {
+                    onError("登录成功但未获取到 token，原始响应: " + resp.toString());
                     return;
                 }
                 ApiClient.setToken(token);
