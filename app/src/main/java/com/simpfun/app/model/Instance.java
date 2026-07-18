@@ -1,64 +1,62 @@
 package com.simpfun.app.model;
 
+import com.simpfun.app.util.Json;
 import org.json.JSONObject;
 
-import com.simpfun.app.util.Json;
-
-/**
- * 服务器实例模型 — 对齐 2026-07-18 真实 API 响应 /api/ins/list
- */
+/** 服务器实例：来自 GET /api/ins/list，顶层字段是 list */
 public class Instance {
-    public int id = 0;
+    public int id;
     public String name = "";
     public String cpu = "";
     public String ram = "";
     public String disk = "";
-    public int state = 0;          // 0=离线
-    public int pteroId = 0;
-    public int versionId = 0;
-    public int area = 0;
+    public int state;
+    public int versionId;
+    public int area;
     public String createTime = "";
     public String lastPaidTime = "";
-    public JSONObject raw;
+    public int pteroId;
 
     public static Instance from(JSONObject o) {
         Instance i = new Instance();
-        i.raw = o;
-        i.id = Json.pickInt(o, 0, "id");
-        i.name = Json.optString(o, "name", "");
-        i.cpu = Json.optString(o, "cpu", "");
-        i.ram = Json.optString(o, "ram", "");
-        i.disk = Json.optString(o, "disk", "");
-        i.state = Json.pickInt(o, 0, "state");
-        i.pteroId = Json.pickInt(o, 0, "ptero_id", "pterodactyl_id");
-        i.versionId = Json.pickInt(o, 0, "version_id");
-        i.area = Json.pickInt(o, 0, "area");
-        i.createTime = Json.optString(o, "create_time", "");
-        i.lastPaidTime = Json.optString(o, "last_paid_time", "last_paidtime");
+        if (o == null) return i;
+        i.id = Json.optInt(o, 0, "id");
+        i.name = Json.optString(o, "name");
+        i.cpu = Json.optString(o, "cpu");
+        i.ram = Json.optString(o, "ram");
+        i.disk = Json.optString(o, "disk");
+        i.state = Json.optInt(o, 0, "state");
+        i.versionId = Json.optInt(o, 0, "version_id");
+        i.area = Json.optInt(o, 0, "area");
+        i.createTime = Json.optString(o, "create_time");
+        i.lastPaidTime = Json.optString(o, "last_paid_time");
+        i.pteroId = Json.optInt(o, 0, "ptero_id");
         return i;
     }
 
     public String displayName() {
-        return name.isEmpty() ? ("未命名实例 #" + id) : name;
+        return (name == null || name.isEmpty()) ? ("服务器 #" + id) : name;
     }
 
-    /** 返回状态文字 */
     public String stateText() {
         switch (state) {
             case 0: return "离线";
             case 1: return "启动中";
             case 2: return "运行中";
-            case 3: return "停止中";
-            default: return "未知(" + state + ")";
+            default: return "状态 " + state;
         }
     }
 
-    /** 返回配置摘要如 "CPU 4核 | 内存 16GB | 磁盘 16GB" */
+    public int stateColor() {
+        switch (state) {
+            case 0: return 0xFF9E9E9E; // 灰
+            case 1: return 0xFFFFB300; // 琥珀
+            case 2: return 0xFF4CAF50; // 绿
+            default: return 0xFF9E9E9E;
+        }
+    }
+
     public String configSummary() {
-        StringBuilder sb = new StringBuilder();
-        if (!cpu.isEmpty()) sb.append("CPU ").append(cpu).append("核");
-        if (!ram.isEmpty()) { if (sb.length() > 0) sb.append(" | "); sb.append("内存 ").append(ram).append("GB"); }
-        if (!disk.isEmpty()) { if (sb.length() > 0) sb.append(" | "); sb.append("磁盘 ").append(disk).append("GB"); }
-        return sb.toString();
+        return cpu + "核 / " + ram + "G 内存 / " + disk + "G 磁盘";
     }
 }

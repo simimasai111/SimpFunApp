@@ -5,43 +5,27 @@
     android:orientation="vertical"
     android:background="@color/bg">
 
-    <LinearLayout
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingStart="8dp"
-        android:paddingEnd="16dp"
-        android:background="@color/primary">
-
-        <ImageButton
-            android:id="@+id/btn_back"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_back"
-            android:contentDescription="返回" />
-
-        <TextView
-            android:id="@+id/tv_detail_title"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="8dp"
-            android:text="实例详情"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF" />
-    </LinearLayout>
+        android:background="@color/primary"
+        app:navigationIcon="?attr/homeAsUpIndicator"
+        app:titleTextColor="#FFFFFF"
+        xmlns:app="http://schemas.android.com/apk/res-auto" />
 
     <com.google.android.material.tabs.TabLayout
-        android:id="@+id/tabs"
+        android:id="@+id/tabs_instance"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/card" />
+        android:background="@color/primary"
+        app:tabIndicatorColor="#FFFFFF"
+        app:tabTextColor="#B2DFDB"
+        app:tabSelectedTextColor="#FFFFFF"
+        xmlns:app="http://schemas.android.com/apk/res-auto" />
 
     <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/pager"
+        android:id="@+id/vp_instance"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1" />

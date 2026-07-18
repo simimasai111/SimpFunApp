@@ -1,64 +1,42 @@
 package com.simpfun.app;
 
-import android.content.Intent;
 import android.os.Bundle;
-import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.simpfun.app.api.ApiClient;
-import com.simpfun.app.fragment.ServerFragment;
-import com.simpfun.app.fragment.InviteFragment;
-import com.simpfun.app.fragment.ProfileFragment;
-import com.simpfun.app.util.Prefs;
+import com.simpfun.app.adapter.MainPagerAdapter;
 
-/**
- * 主容器：底部三栏导航（服务器 / 邀请 / 我的）
- * 启动时校验 token，缺失则退回登录页。
- */
 public class MainActivity extends AppCompatActivity {
+    private ViewPager2 vp;
     private BottomNavigationView nav;
-    private TextView tvTitle;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        Prefs prefs = new Prefs(this);
-        if (!prefs.hasToken()) {
-            startActivity(new Intent(this, LoginActivity.class));
-            finish();
-            return;
-        }
-        ApiClient.setToken(prefs.getToken());
+    protected void onCreate(Bundle b) {
+        super.onCreate(b);
         setContentView(R.layout.activity_main);
-
-        tvTitle = findViewById(R.id.tv_title);
+        vp = findViewById(R.id.vp_main);
         nav = findViewById(R.id.bottom_nav);
 
-        switchFragment(new ServerFragment(), R.string.nav_server);
+        vp.setAdapter(new MainPagerAdapter(this));
+        vp.setUserInputEnabled(false);
 
         nav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
-            if (id == R.id.nav_server) {
-                switchFragment(new ServerFragment(), R.string.nav_server);
-                return true;
-            } else if (id == R.id.nav_invite) {
-                switchFragment(new InviteFragment(), R.string.nav_invite);
-                return true;
-            } else if (id == R.id.nav_profile) {
-                switchFragment(new ProfileFragment(), R.string.nav_profile);
-                return true;
-            }
-            return false;
+            if (id == R.id.nav_servers) vp.setCurrentItem(0);
+            else if (id == R.id.nav_shop) vp.setCurrentItem(1);
+            else if (id == R.id.nav_me) vp.setCurrentItem(2);
+            return true;
         });
-    }
 
-    private void switchFragment(Fragment f, int titleRes) {
-        if (tvTitle != null) tvTitle.setText(titleRes);
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, f)
-                .commit();
+        vp.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                int id = position == 0 ? R.id.nav_servers : position == 1 ? R.id.nav_shop : R.id.nav_me;
+                nav.setSelectedItemId(id);
+            }
+        });
     }
 }

@@ -3,44 +3,30 @@ package com.simpfun.app.util;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-/**
- * 轻量偏好存储：保存登录 token 与基础用户信息（等价于网页端的 localStorage）
- */
+/** 本地持久化：token / 用户名 / uid */
 public class Prefs {
     private static final String NAME = "simpfun_prefs";
-    private static final String KEY_TOKEN = "token";
-    private static final String KEY_USERNAME = "username";
-    private static final String KEY_UID = "uid";
-
     private final SharedPreferences sp;
 
-    public Prefs(Context ctx) {
-        sp = ctx.getSharedPreferences(NAME, Context.MODE_PRIVATE);
+    public Prefs(Context c) {
+        sp = c.getSharedPreferences(NAME, Context.MODE_PRIVATE);
     }
 
-    public void saveToken(String token) {
-        sp.edit().putString(KEY_TOKEN, token == null ? "" : token).apply();
+    public void saveToken(String t) {
+        sp.edit().putString("token", t == null ? "" : t).apply();
     }
 
     public String getToken() {
-        return sp.getString(KEY_TOKEN, "");
+        return sp.getString("token", "");
     }
 
-    public boolean hasToken() {
-        return !getToken().isEmpty();
-    }
-
-    public void saveUser(String username, String uid) {
-        sp.edit().putString(KEY_USERNAME, username == null ? "" : username)
-                .putString(KEY_UID, uid == null ? "" : uid).apply();
+    public void saveUser(String user, String uid) {
+        sp.edit().putString("user", user == null ? "" : user)
+                .putString("uid", uid == null ? "" : uid).apply();
     }
 
     public String getUsername() {
-        return sp.getString(KEY_USERNAME, "");
-    }
-
-    public String getUid() {
-        return sp.getString(KEY_UID, "");
+        return sp.getString("user", "");
     }
 
     public void clear() {

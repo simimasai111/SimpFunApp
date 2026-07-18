@@ -2,29 +2,29 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="@color/bg">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical"
         android:padding="12dp">
 
-        <TextView
+        <Spinner
+            android:id="@+id/sp_game"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/nav_server"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:background="@color/surface" />
 
-        <Button
-            android:id="@+id/btn_server_refresh"
-            android:layout_width="wrap_content"
+        <Spinner
+            android:id="@+id/sp_version"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="@string/pull_refresh"
-            style="?attr/materialButtonOutlinedStyle" />
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:background="@color/surface" />
     </LinearLayout>
 
     <FrameLayout
@@ -32,30 +32,28 @@
         android:layout_height="0dp"
         android:layout_weight="1">
 
-        <ListView
-            android:id="@+id/list_server"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_shop"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:divider="@color/divider"
-            android:dividerHeight="1dp"
-            android:padding="8dp" />
+            android:padding="12dp"
+            android:clipToPadding="false" />
 
         <TextView
-            android:id="@+id/tv_empty_server"
+            android:id="@+id/tv_empty_shop"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="@string/empty_server"
-            android:textColor="@color/textSecondary"
+            android:text="该版本暂无可选规格"
+            android:textColor="@color/text_secondary"
             android:visibility="gone" />
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab_create"
+        <ProgressBar
+            android:id="@+id/pb_shop"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="end|bottom"
-            android:layout_margin="16dp"
-            android:src="@android:drawable/ic_input_add"
-            android:contentDescription="@string/create_instance" />
+            android:layout_gravity="center"
+            android:visibility="gone" />
     </FrameLayout>
+
 </LinearLayout>

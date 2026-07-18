@@ -8,158 +8,93 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 
-import com.simpfun.app.InstanceDetailActivity;
 import com.simpfun.app.R;
-import com.simpfun.app.api.ApiClient;
-import com.simpfun.app.api.WsClient;
+import com.simpfun.app.api.Ws;
 
-import org.json.JSONObject;
-
-/**
- * 终端：通过 WebSocket 实时接收服务器日志、发送命令。
- */
-public class TerminalFragment extends Fragment implements WsClient.WsListener {
+public class TerminalFragment extends Fragment implements Ws.Listener {
+    private String insId;
+    private Ws ws;
     private TextView tvLog;
     private TextView tvStatus;
     private EditText etCmd;
-    private ScrollView scroll;
-    private WsClient ws;
-    private boolean closed = false;
+    private ScrollView sv;
 
-    public TerminalFragment() {
+    @Override
+    public void onCreate(Bundle b) {
+        super.onCreate(b);
+        insId = getArguments() != null ? getArguments().getString("ins_id") : "";
     }
 
     @Override
-    public View onCreateView(LayoutInflater inf, ViewGroup vg, Bundle s) {
+    public View onCreateView(LayoutInflater inf, ViewGroup vg, Bundle b) {
         View root = inf.inflate(R.layout.fragment_terminal, vg, false);
-        tvLog = root.findViewById(R.id.tv_terminal_log);
-        tvStatus = root.findViewById(R.id.tv_terminal_status);
-        etCmd = root.findViewById(R.id.et_terminal_cmd);
-        Button btnSend = root.findViewById(R.id.btn_terminal_send);
-        scroll = root.findViewById(R.id.scroll_terminal);
+        tvLog = root.findViewById(R.id.tv_log);
+        tvStatus = root.findViewById(R.id.tv_term_status);
+        etCmd = root.findViewById(R.id.et_cmd);
+        sv = root.findViewById(R.id.sv_log);
+        Button btnSend = root.findViewById(R.id.btn_send);
 
         btnSend.setOnClickListener(v -> {
-            String c = etCmd.getText().toString().trim();
-            if (!c.isEmpty() && ws != null) {
-                ws.sendCommand(c);
-                append("> " + c);
-                etCmd.setText("");
-            }
+            String c = etCmd.getText().toString();
+            if (c.isEmpty()) return;
+            if (ws != null) ws.sendCommand(c);
+            appendLog("$ " + c);
+            etCmd.setText("");
         });
-
-        String insId = ((InstanceDetailActivity) requireActivity()).getInsId();
-        connectWs(insId);
         return root;
     }
 
-    private void connectWs(String insId) {
-        append("正在连接终端…");
-        ApiClient.getWsToken(insId, new ApiClient.ApiCallback() {
-            @Override
-            public void onSuccess(JSONObject resp) {
-                JSONObject d = resp.optJSONObject("data");
-                if (d == null) {
-                    append("获取终端地址失败：data 为空");
-                    return;
-                }
-                String socket = d.optString("socket", d.optString("url", ""));
-                String token = d.optString("token", "");
-                if (socket.isEmpty()) {
-                    append("获取终端地址失败：socket 为空");
-                    return;
-                }
-                ws = new WsClient(socket, token, TerminalFragment.this);
-                ws.connect();
-            }
-
-            @Override
-            public void onError(String e) {
-                append("获取终端地址失败：" + e);
-            }
-        });
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (ws == null) {
+            ws = new Ws(insId, this);
+            ws.connect();
+        }
     }
 
-    private void append(String line) {
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (ws != null) {
+            ws.disconnect();
+            ws = null;
+        }
+    }
+
+    private void appendLog(String line) {
         if (tvLog == null) return;
-        String t = tvLog.getText().toString();
-        String nl = t.isEmpty() ? "" : "\n";
-        tvLog.setText(t + nl + translate(line));
-        scroll.post(() -> scroll.fullScroll(View.FOCUS_DOWN));
-    }
-
-    /** 简幻欢前端日志汉化映射（常见 Pterodactyl 英文 -> 中文） */
-    private String translate(String line) {
-        line = line.replace("[Pterodactyl Daemon]", "[简幻欢]")
-                .replace("[Pterodactyl]", "[简幻欢]");
-        if (line.contains("Server marked as starting")) return "服务器正在启动…";
-        if (line.contains("Server is running")) return "服务器正在运行";
-        if (line.contains("Server is stopping")) return "服务器正在停止";
-        if (line.contains("Server is offline")) return "服务器已停止";
-        if (line.contains("Container crashed") || line.contains("process has crashed"))
-            return "服务器进程已崩溃";
-        if (line.contains("Out of memory")) return "内存不足导致崩溃";
-        if (line.contains("Unknown command")) return "未知指令";
-        return line;
+        tvLog.append(line + "\n");
+        sv.post(() -> sv.fullScroll(View.FOCUS_DOWN));
     }
 
     @Override
     public void onOpen() {
-        append("【已连接】");
+        tvStatus.setText("连接中…");
     }
 
     @Override
     public void onLog(String line) {
-        append(line);
+        appendLog(line);
     }
 
     @Override
     public void onStatus(String status) {
-        if (tvStatus != null) tvStatus.setText("状态：" + status);
-    }
-
-    @Override
-    public void onStats(JSONObject stats) {
-        // 资源统计（CPU/内存/网络）可在此解析展示，简化为保留接口
-    }
-
-    @Override
-    public void onTokenExpiring() {
-        append("【token 即将过期，刷新中…】");
-        String insId = ((InstanceDetailActivity) requireActivity()).getInsId();
-        ApiClient.getWsToken(insId, new ApiClient.ApiCallback() {
-            @Override
-            public void onSuccess(JSONObject resp) {
-                JSONObject d = resp.optJSONObject("data");
-                if (d != null && ws != null) {
-                    ws.setToken(d.optString("token", ""));
-                    ws.reauth();
-                }
-            }
-
-            @Override
-            public void onError(String e) {
-                append("刷新 token 失败：" + e);
-            }
-        });
-    }
-
-    @Override
-    public void onClosed() {
-        if (!closed) append("【连接已关闭】");
+        tvStatus.setText("状态：" + status);
     }
 
     @Override
     public void onError(String msg) {
-        append("【错误】" + msg);
+        tvStatus.setText("错误：" + msg);
+        Toast.makeText(getContext(), "终端：" + msg, Toast.LENGTH_LONG).show();
     }
 
     @Override
-    public void onDestroy() {
-        closed = true;
-        if (ws != null) ws.close();
-        super.onDestroy();
+    public void onClosed() {
+        tvStatus.setText("已断开");
     }
 }

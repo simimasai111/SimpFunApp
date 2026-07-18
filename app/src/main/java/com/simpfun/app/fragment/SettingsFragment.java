@@ -1,158 +1,123 @@
 package com.simpfun.app.fragment;
 
-import android.app.AlertDialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
-import com.simpfun.app.InstanceDetailActivity;
 import com.simpfun.app.R;
-import com.simpfun.app.api.ApiClient;
+import com.simpfun.app.api.Api;
+import com.simpfun.app.model.InstanceDetail;
+import com.simpfun.app.model.SftpInfo;
+import com.simpfun.app.util.Json;
 
 import org.json.JSONObject;
 
-import java.util.HashMap;
-import java.util.Map;
-
-/**
- * 实例设置：电源操作、重装、更名、删除
- */
 public class SettingsFragment extends Fragment {
-    private String insId = "";
-    private String detailVersionId = "";
-    private TextView tvInfo;
+    private String insId;
+    private int versionId = -1;
+    private SftpInfo sftp;
+    private TextView tvSftp, tvVersion;
+    private ProgressBar pb;
 
-    public SettingsFragment() {
+    @Override
+    public void onCreate(Bundle b) {
+        super.onCreate(b);
+        insId = getArguments() != null ? getArguments().getString("ins_id") : "";
     }
 
     @Override
-    public View onCreateView(LayoutInflater inf, ViewGroup vg, Bundle s) {
-        View root = inf.inflate(R.layout.fragment_instance_settings, vg, false);
-        insId = ((InstanceDetailActivity) requireActivity()).getInsId();
+    public View onCreateView(LayoutInflater inf, ViewGroup vg, Bundle b) {
+        View root = inf.inflate(R.layout.fragment_settings, vg, false);
+        tvSftp = root.findViewById(R.id.tv_sftp);
+        tvVersion = root.findViewById(R.id.tv_version);
+        pb = root.findViewById(R.id.pb_settings);
 
-        tvInfo = root.findViewById(R.id.tv_ins_info);
-        Button btnStart = root.findViewById(R.id.btn_start);
-        Button btnStop = root.findViewById(R.id.btn_stop);
-        Button btnRestart = root.findViewById(R.id.btn_restart);
-        Button btnReinstall = root.findViewById(R.id.btn_reinstall);
         Button btnRename = root.findViewById(R.id.btn_rename);
+        Button btnReinstall = root.findViewById(R.id.btn_reinstall);
         Button btnDelete = root.findViewById(R.id.btn_delete);
+        Button btnCopySftp = root.findViewById(R.id.btn_copy_sftp);
 
-        btnStart.setOnClickListener(v -> power("start"));
-        btnStop.setOnClickListener(v -> power("stop"));
-        btnRestart.setOnClickListener(v -> power("restart"));
-        btnReinstall.setOnClickListener(v -> showReinstall());
-        btnRename.setOnClickListener(v -> showRename());
-        btnDelete.setOnClickListener(v -> showDelete());
+        btnRename.setOnClickListener(v -> renameDialog());
+        btnReinstall.setOnClickListener(v -> reinstallDialog());
+        btnDelete.setOnClickListener(v -> deleteDialog());
+        btnCopySftp.setOnClickListener(v -> copySftp());
 
-        loadDetail();
+        load();
         return root;
     }
 
-    private void loadDetail() {
-        ApiClient.getInstanceDetail(insId, new ApiClient.ApiCallback() {
+    private void load() {
+        pb.setVisibility(View.VISIBLE);
+        Api.get().detail(insId, new Api.CB() {
             @Override
-            public void onSuccess(JSONObject resp) {
-                JSONObject d = resp.optJSONObject("data");
-                StringBuilder sb = new StringBuilder();
-                if (d != null) {
-                    detailVersionId = d.optString("version_id", detailVersionId);
-                    for (String k : new String[]{"instance_uuid", "uuid", "friendly_name", "name",
-                            "state", "status", "image", "memory", "version_name", "version", "port", "version_id"}) {
-                        if (d.has(k) && !d.isNull(k)) {
-                            sb.append(k).append("：").append(d.optString(k)).append("\n");
-                        }
-                    }
-                }
-                if (sb.length() == 0) sb.append("（未获取到实例详情，可尝试电源操作）");
-                requireActivity().runOnUiThread(() -> tvInfo.setText(sb.toString()));
-            }
-
-            @Override
-            public void onError(String e) {
-                requireActivity().runOnUiThread(() -> tvInfo.setText("详情加载失败：" + e));
-            }
-        });
-    }
-
-    private void power(String action) {
-        ApiClient.power(insId, action, new ApiClient.ApiCallback() {
-            @Override
-            public void onSuccess(JSONObject r) {
+            public void ok(JSONObject resp) {
+                InstanceDetail d = InstanceDetail.from(resp);
+                versionId = d.versionId;
                 requireActivity().runOnUiThread(() -> {
-                    Toast.makeText(getContext(), "已发送：" + action, Toast.LENGTH_SHORT).show();
-                    loadDetail();
+                    tvVersion.setText("版本：" + d.versionName + "（ID " + d.versionId + "）");
+                });
+                Api.get().sftp(insId, new Api.CB() {
+                    @Override
+                    public void ok(JSONObject r2) {
+                        sftp = SftpInfo.from(r2);
+                        requireActivity().runOnUiThread(() -> {
+                            pb.setVisibility(View.GONE);
+                            tvSftp.setText("地址：" + sftp.ip + (sftp.port.isEmpty() ? "" : (":" + sftp.port))
+                                    + "\n账号：" + sftp.username
+                                    + "\n密码：" + sftp.password);
+                        });
+                    }
+
+                    @Override
+                    public void fail(String msg) {
+                        requireActivity().runOnUiThread(() -> {
+                            pb.setVisibility(View.GONE);
+                            tvSftp.setText("获取 SFTP 失败：" + msg);
+                        });
+                    }
                 });
             }
 
             @Override
-            public void onError(String e) {
-                requireActivity().runOnUiThread(() ->
-                        Toast.makeText(getContext(), e, Toast.LENGTH_SHORT).show());
+            public void fail(String msg) {
+                requireActivity().runOnUiThread(() -> {
+                    pb.setVisibility(View.GONE);
+                    Toast.makeText(getContext(), "加载失败：" + msg, Toast.LENGTH_LONG).show();
+                });
             }
         });
     }
 
-    private void showReinstall() {
-        new AlertDialog.Builder(requireContext())
-                .setTitle("重装服务器？")
-                .setMessage("重装将用所选版本覆盖当前服务端文件，确定继续？")
-                .setPositiveButton("重装", (d, w) -> {
-                    Map<String, String> p = new HashMap<>();
-                    p.put("version_id", detailVersionId);
-                    p.put("diff", "0");
-                    p.put("save", "1");
-                    ApiClient.reinstall(insId, p, new ApiClient.ApiCallback() {
-                        @Override
-                        public void onSuccess(JSONObject r) {
-                            requireActivity().runOnUiThread(() -> {
-                                Toast.makeText(getContext(), "已提交重装", Toast.LENGTH_SHORT).show();
-                                loadDetail();
-                            });
-                        }
-
-                        @Override
-                        public void onError(String e) {
-                            requireActivity().runOnUiThread(() ->
-                                    Toast.makeText(getContext(), e, Toast.LENGTH_SHORT).show());
-                        }
-                    });
-                })
-                .setNegativeButton("取消", null)
-                .show();
-    }
-
-    private void showRename() {
-        EditText et = new EditText(getContext());
+    private void renameDialog() {
+        EditText et = new EditText(requireContext());
         et.setHint("新名称");
         new AlertDialog.Builder(requireContext())
-                .setTitle("更名")
+                .setTitle("重命名实例")
                 .setView(et)
                 .setPositiveButton("确定", (d, w) -> {
                     String name = et.getText().toString().trim();
                     if (name.isEmpty()) return;
-                    Map<String, String> p = new HashMap<>();
-                    p.put("name", name);
-                    ApiClient.renameInstance(insId, p, new ApiClient.ApiCallback() {
+                    Api.get().rename(insId, name, new Api.CB() {
                         @Override
-                        public void onSuccess(JSONObject r) {
-                            requireActivity().runOnUiThread(() -> {
-                                Toast.makeText(getContext(), "已更名", Toast.LENGTH_SHORT).show();
-                                loadDetail();
-                            });
+                        public void ok(JSONObject r) {
+                            requireActivity().runOnUiThread(() -> Toast.makeText(getContext(), "已重命名", Toast.LENGTH_SHORT).show());
                         }
 
                         @Override
-                        public void onError(String e) {
-                            requireActivity().runOnUiThread(() ->
-                                    Toast.makeText(getContext(), e, Toast.LENGTH_SHORT).show());
+                        public void fail(String msg) {
+                            requireActivity().runOnUiThread(() -> Toast.makeText(getContext(), "重命名失败：" + msg, Toast.LENGTH_LONG).show());
                         }
                     });
                 })
@@ -160,28 +125,66 @@ public class SettingsFragment extends Fragment {
                 .show();
     }
 
-    private void showDelete() {
+    private void reinstallDialog() {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("重装实例？")
+                .setMessage("将使用当前版本重新安装系统，数据可能丢失。")
+                .setPositiveButton("重装", (d, w) -> {
+                    if (versionId < 0) {
+                        Toast.makeText(getContext(), "版本未知，无法重装", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    Api.get().reinstall(insId, versionId, new Api.CB() {
+                        @Override
+                        public void ok(JSONObject r) {
+                            requireActivity().runOnUiThread(() -> Toast.makeText(getContext(), "已提交重装", Toast.LENGTH_SHORT).show());
+                        }
+
+                        @Override
+                        public void fail(String msg) {
+                            requireActivity().runOnUiThread(() -> Toast.makeText(getContext(), "重装失败：" + msg, Toast.LENGTH_LONG).show());
+                        }
+                    });
+                })
+                .setNegativeButton("取消", null)
+                .show();
+    }
+
+    private void deleteDialog() {
         new AlertDialog.Builder(requireContext())
                 .setTitle("删除实例？")
-                .setMessage("删除后数据不可恢复！")
+                .setMessage("此操作不可恢复！")
                 .setPositiveButton("删除", (d, w) -> {
-                    ApiClient.deleteInstance(insId, new ApiClient.ApiCallback() {
+                    Api.get().destroy(insId, new Api.CB() {
                         @Override
-                        public void onSuccess(JSONObject r) {
+                        public void ok(JSONObject r) {
                             requireActivity().runOnUiThread(() -> {
-                                Toast.makeText(getContext(), "已删除", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getContext(), "已删除实例", Toast.LENGTH_SHORT).show();
                                 requireActivity().finish();
                             });
                         }
 
                         @Override
-                        public void onError(String e) {
-                            requireActivity().runOnUiThread(() ->
-                                    Toast.makeText(getContext(), e, Toast.LENGTH_SHORT).show());
+                        public void fail(String msg) {
+                            requireActivity().runOnUiThread(() -> Toast.makeText(getContext(), "删除失败：" + msg, Toast.LENGTH_LONG).show());
                         }
                     });
                 })
                 .setNegativeButton("取消", null)
                 .show();
+    }
+
+    private void copySftp() {
+        if (sftp == null || sftp.ip.isEmpty()) {
+            Toast.makeText(getContext(), "SFTP 信息未加载", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String text = "地址:" + sftp.ip + (sftp.port.isEmpty() ? "" : (":" + sftp.port))
+                + " 账号:" + sftp.username + " 密码:" + sftp.password;
+        ClipboardManager cm = (ClipboardManager) requireContext().getSystemService(Context.CLIPBOARD_SERVICE);
+        if (cm != null) {
+            cm.setPrimaryClip(ClipData.newPlainText("sftp", text));
+            Toast.makeText(getContext(), "SFTP 信息已复制", Toast.LENGTH_SHORT).show();
+        }
     }
 }

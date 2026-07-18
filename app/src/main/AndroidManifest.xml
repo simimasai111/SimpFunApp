@@ -31,14 +31,12 @@
             android:name=".InstanceDetailActivity"
             android:exported="false"
             android:theme="@style/Theme.SimpFun" />
+
         <activity
             android:name=".CreateInstanceActivity"
             android:exported="false"
             android:theme="@style/Theme.SimpFun" />
-        <activity
-            android:name=".ShopActivity"
-            android:exported="false"
-            android:theme="@style/Theme.SimpFun" />
+
         <activity
             android:name=".RechargeActivity"
             android:exported="false"

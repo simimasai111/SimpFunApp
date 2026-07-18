@@ -1,30 +1,31 @@
 package com.simpfun.app.model;
 
+import com.simpfun.app.util.Json;
 import org.json.JSONObject;
 
-import com.simpfun.app.util.Json;
-
-/** 备份 / 回档项模型 */
+/** 备份：GET /api/ins/{id}/backup -> list:[{id,status,size,valid_time,tag,is_windows}] */
 public class BackupItem {
-    public String id = "";
-    public String name = "";
-    public String time = "";
-    public long size = 0;
-    public JSONObject raw;
+    public int id;
+    public int status;
+    public long size;
+    public String validTime = "";
+    public String tag = "";
+    public boolean isWindows;
 
     public static BackupItem from(JSONObject o) {
         BackupItem b = new BackupItem();
-        b.raw = o;
-        b.id = Json.pick(o, "id", "backup_id", "bid", "uuid", "file_id");
-        // 真实接口字段为 tag（备份标签），如「重装时系统生成备份」
-        b.name = Json.pick(o, "tag", "backup_name", "name", "filename", "file_name", "title");
-        b.time = Json.pick(o, "valid_time", "time", "create_time", "created", "date", "backup_time");
-        b.size = Json.pickLong(o, 0, "size", "file_size", "bytes");
+        if (o == null) return b;
+        b.id = Json.optInt(o, 0, "id");
+        b.status = Json.optInt(o, 0, "status");
+        b.size = Json.optLong(o, 0, "size");
+        b.validTime = Json.optString(o, "valid_time");
+        b.tag = Json.optString(o, "tag");
+        b.isWindows = Json.optBool(o, "is_windows");
         return b;
     }
 
-    @Override
-    public String toString() {
-        return name.isEmpty() ? id : name;
+    public String sizeText() {
+        if (size < 1024L * 1024L) return String.format("%.1f MB", size / 1024f / 1024f);
+        return String.format("%.2f GB", size / 1024f / 1024f / 1024f);
     }
 }

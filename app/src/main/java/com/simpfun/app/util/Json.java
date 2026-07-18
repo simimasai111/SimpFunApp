@@ -4,101 +4,83 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
- * JSON 取值工具：按多候选 key 顺序取，兼容简幻欢接口字段命名不统一的情况。
+ * 健壮的 JSON 取值工具：多 key 兜底、空安全、类型安全。
+ * 字段名严格对应实测 API（见 simpfun_real_apis.md）。
  */
-public final class Json {
-    private Json() {
-    }
+public class Json {
 
-    public static String pick(JSONObject o, String... keys) {
+    public static String optString(JSONObject o, String... keys) {
         if (o == null) return "";
         for (String k : keys) {
-            if (o.has(k) && !o.isNull(k)) {
-                try {
-                    return o.getString(k);
-                } catch (Exception ignore) {
-                }
-            }
+            if (o.has(k) && !o.isNull(k)) return o.optString(k, "");
         }
         return "";
     }
 
-    public static int pickInt(JSONObject o, int def, String... keys) {
+    public static int optInt(JSONObject o, int def, String... keys) {
         if (o == null) return def;
         for (String k : keys) {
             if (o.has(k) && !o.isNull(k)) {
                 try {
-                    return o.getInt(k);
-                } catch (Exception ignore) {
+                    return o.optInt(k);
+                } catch (Exception ignored) {
                 }
             }
         }
         return def;
     }
 
-    public static long pickLong(JSONObject o, long def, String... keys) {
+    public static long optLong(JSONObject o, long def, String... keys) {
         if (o == null) return def;
         for (String k : keys) {
             if (o.has(k) && !o.isNull(k)) {
                 try {
-                    return o.getLong(k);
-                } catch (Exception ignore) {
+                    return o.optLong(k);
+                } catch (Exception ignored) {
                 }
             }
         }
         return def;
     }
 
-    public static boolean pickBool(JSONObject o, String... keys) {
+    public static boolean optBool(JSONObject o, String... keys) {
         if (o == null) return false;
         for (String k : keys) {
             if (o.has(k) && !o.isNull(k)) {
                 try {
-                    return o.getBoolean(k);
-                } catch (Exception ignore) {
-                }
-                try {
-                    return o.getInt(k) != 0;
-                } catch (Exception ignore) {
+                    return o.optBoolean(k, false);
+                } catch (Exception ignored) {
                 }
             }
         }
         return false;
     }
 
-    /** 从 data 中按常见 key 取出 JSONArray（兼容 data 直接是数组或包在对象里） */
-    public static JSONArray toArray(Object d) {
-        if (d instanceof JSONArray) return (JSONArray) d;
-        if (d instanceof JSONObject) {
-            JSONObject o = (JSONObject) d;
-            for (String k : new String[]{"list", "data", "items", "rows", "files", "backups", "games", "shops", "result", "content"}) {
-                if (o.optJSONArray(k) != null) return o.optJSONArray(k);
+    public static JSONObject optObject(JSONObject o, String... keys) {
+        if (o == null) return null;
+        for (String k : keys) {
+            if (o.has(k) && !o.isNull(k)) {
+                Object v = o.opt(k);
+                if (v instanceof JSONObject) return (JSONObject) v;
             }
         }
         return null;
     }
 
-    /** 取字符串（字段缺失或 null 时回退默认值），比 JSONObject.optString 更稳健 */
-    public static String optString(JSONObject o, String key, String def) {
-        if (o == null || !o.has(key) || o.isNull(key)) return def == null ? "" : def;
-        try {
-            return o.getString(key);
-        } catch (Exception e) {
-            return def == null ? "" : def;
-        }
+    public static JSONArray toArray(Object v) {
+        if (v instanceof JSONArray) return (JSONArray) v;
+        return null;
     }
 
-    /** 取布尔（带默认值），兼容整数 0/1 表示 */
-    public static boolean optBool(JSONObject o, boolean def, String key) {
-        if (o == null || !o.has(key) || o.isNull(key)) return def;
-        try {
-            return o.getBoolean(key);
-        } catch (Exception e) {
-            try {
-                return o.getInt(key) != 0;
-            } catch (Exception e2) {
-                return def;
+    /** 在对象里尝试多个 key，取第一个 JSONArray */
+    public static JSONArray optArray(JSONObject o, String... keys) {
+        if (o == null) return null;
+        for (String k : keys) {
+            if (o.has(k) && !o.isNull(k)) {
+                Object v = o.opt(k);
+                if (v instanceof JSONArray) return (JSONArray) v;
             }
         }
+        return null;
     }
 }

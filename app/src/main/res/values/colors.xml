@@ -1,18 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#1565C0</color>
-    <color name="primaryDark">#0D47A1</color>
-    <color name="primaryLight">#5E92F3</color>
-    <color name="accent">#FF6F00</color>
-    <color name="bg">#F5F6FA</color>
+    <color name="primary">#00897B</color>
+    <color name="primary_dark">#00695C</color>
+    <color name="accent">#00BFA5</color>
+    <color name="bg">#F4F6F8</color>
+    <color name="surface">#FFFFFF</color>
     <color name="card">#FFFFFF</color>
     <color name="text">#212121</color>
-    <color name="textSecondary">#757575</color>
+    <color name="text_secondary">#757575</color>
     <color name="divider">#E0E0E0</color>
-
-    <!-- 实例状态色 -->
-    <color name="status_running">#2E7D32</color>
-    <color name="status_stopped">#9E9E9E</color>
-    <color name="status_starting">#EF6C00</color>
-    <color name="status_error">#C62828</color>
+    <color name="green">#4CAF50</color>
+    <color name="amber">#FFB300</color>
+    <color name="gray">#9E9E9E</color>
+    <color name="red">#E53935</color>
 </resources>

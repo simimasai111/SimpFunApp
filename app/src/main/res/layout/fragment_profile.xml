@@ -1,163 +1,184 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/bg">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="12dp">
 
-        <LinearLayout
+        <ProgressBar
+            android:id="@+id/pb_profile"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="12dp">
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            xmlns:app="http://schemas.android.com/apk/res-auto">
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/nav_profile"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <Button
-                android:id="@+id/btn_p_refresh"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/pull_refresh"
-                style="?attr/materialButtonOutlinedStyle" />
-        </LinearLayout>
-
-        <LinearLayout style="@style/Card">
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="8dp">
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/profile_username"
-                    android:textColor="@color/textSecondary" />
-                <TextView
-                    android:id="@+id/tv_p_user"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textStyle="bold" />
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="8dp">
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/profile_uid"
-                    android:textColor="@color/textSecondary" />
-                <TextView
-                    android:id="@+id/tv_p_uid"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textStyle="bold" />
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="8dp">
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/profile_points"
-                    android:textColor="@color/textSecondary" />
-                <TextView
-                    android:id="@+id/tv_p_points"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textStyle="bold" />
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="8dp">
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/profile_diamond"
-                    android:textColor="@color/textSecondary" />
-                <TextView
-                    android:id="@+id/tv_p_diamond"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textStyle="bold" />
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/profile_verified"
-                    android:textColor="@color/textSecondary" />
-                <TextView
-                    android:id="@+id/tv_p_verified"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textStyle="bold" />
-            </LinearLayout>
-        </LinearLayout>
+                android:orientation="vertical"
+                android:padding="16dp">
 
-        <LinearLayout style="@style/Card">
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/raw_data"
-                android:textColor="@color/textSecondary"
-                android:textSize="13sp"
-                android:layout_marginBottom="4dp" />
-            <TextView
-                android:id="@+id/tv_p_raw"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="11sp"
-                android:textColor="@color/textSecondary"
-                android:textIsSelectable="true" />
-        </LinearLayout>
+                <TextView
+                    android:id="@+id/tv_user"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text" />
 
-        <Button
-            android:id="@+id/btn_p_shop"
+                <TextView
+                    android:id="@+id/tv_uid"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textColor="@color/gray"
+                    android:textSize="12sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="12dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="积分" android:textColor="@color/text_secondary" android:textSize="12sp" />
+                        <TextView android:id="@+id/tv_point" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:textSize="18sp" android:textStyle="bold" android:textColor="@color/primary" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="钻石" android:textColor="@color/text_secondary" android:textSize="12sp" />
+                        <TextView android:id="@+id/tv_diamond" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:textSize="18sp" android:textStyle="bold" android:textColor="@color/primary" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="实名" android:textColor="@color/text_secondary" android:textSize="12sp" />
+                        <TextView android:id="@+id/tv_verified" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:textSize="16sp" android:textStyle="bold" android:textColor="@color/text" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="QQ" android:textColor="@color/text_secondary" android:textSize="12sp" />
+                        <TextView android:id="@+id/tv_qq" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:textSize="16sp" android:textStyle="bold" android:textColor="@color/text" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/shop"
-            style="?attr/materialButtonOutlinedStyle" />
+            android:layout_marginTop="12dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            xmlns:app="http://schemas.android.com/apk/res-auto">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="邀请有礼"
+                    android:textStyle="bold"
+                    android:textSize="15sp"
+                    android:textColor="@color/text" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/tv_invite"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/accent"
+                        android:text="—" />
+
+                    <Button
+                        android:id="@+id/btn_copy_invite"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="复制邀请码" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <Button
-            android:id="@+id/btn_p_recharge"
+            android:id="@+id/btn_recharge"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/recharge"
-            style="?attr/materialButtonOutlinedStyle" />
+            android:layout_marginTop="12dp"
+            android:text="@string/recharge" />
 
         <Button
-            android:id="@+id/btn_p_logout"
+            android:id="@+id/btn_logout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="@string/logout"
-            android:textColor="@color/status_error" />
+            style="?attr/materialButtonOutlinedStyle" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="原始接口响应（调试用）"
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary" />
+
+        <TextView
+            android:id="@+id/tv_raw"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textSize="11sp"
+            android:textColor="@color/gray"
+            android:typeface="monospace"
+            android:maxLines="20" />
 
     </LinearLayout>
 </ScrollView>
