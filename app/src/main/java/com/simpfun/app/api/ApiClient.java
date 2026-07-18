@@ -176,12 +176,19 @@ public final class ApiClient {
         get("/api/games/list", cb);
     }
 
-    public static void getGameKinds(ApiCallback cb) {
-        get("/api/games/kindlist", cb);
+    /** 游戏类别列表（需 game_id） */
+    public static void getGameKinds(String gameId, ApiCallback cb) {
+        get("/api/games/kindlist?game_id=" + enc(gameId == null ? "" : gameId), cb);
     }
 
-    public static void getGameVersions(ApiCallback cb) {
-        get("/api/games/versionlist", cb);
+    /** 版本列表（需 kind_id） */
+    public static void getGameVersions(String kindId, ApiCallback cb) {
+        get("/api/games/versionlist?kind_id=" + enc(kindId == null ? "" : kindId), cb);
+    }
+
+    /** 商店 / 规格列表（创建实例时按 version_id 筛选套餐价格） */
+    public static void getShopList(String versionId, ApiCallback cb) {
+        get("/api/shop/list?version_id=" + enc(versionId == null ? "" : versionId), cb);
     }
 
     // ===================== 终端 WebSocket =====================

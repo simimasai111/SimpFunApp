@@ -3,128 +3,142 @@ package com.simpfun.app;
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 
 import com.simpfun.app.api.ApiClient;
-import com.simpfun.app.model.Game;
-import com.simpfun.app.util.Json;
+import com.simpfun.app.fragment.StepConfirmFragment;
+import com.simpfun.app.fragment.StepGameFragment;
+import com.simpfun.app.fragment.StepSpecFragment;
+import com.simpfun.app.fragment.StepVersionFragment;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
- * 创建实例：选择游戏 / 版本，填写名称与内存后提交。
- * 提交字段名（name/game_id/version/memory 等）按接口实际命名做了多候选，如不符请在 doCreate 调整。
+ * 创建实例（多步向导）：
+ *   第1步 选择游戏 → 第2步 选择分类/版本 → 第3步 选择规格/价格 → 第4步 确认并提交
+ * 提交字段：item_id（规格）+ version_id（版本）+ name（实例名，可选）+ custom（可选）。
  */
 public class CreateInstanceActivity extends AppCompatActivity {
     public static final int REQ = 1001;
 
-    private Spinner spGame;
-    private Spinner spVer;
-    private EditText etName;
-    private EditText etMem;
-    private final List<Game> games = new ArrayList<>();
-    private final List<Game> vers = new ArrayList<>();
+    // —— 跨步骤选择状态 ——
+    public String selGameId, selGameName;
+    public String selKindId, selKindName;
+    public String selVersionId, selVersionName;
+    public String selItemId, selItemName, selItemPrice;
+    public String selName;
+
+    private static final int TOTAL = 4;
+    private int step = 0;
+    private TextView[] dots;
+    private Button btnPrev, btnNext;
+    private boolean submitting = false;
 
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
         setContentView(R.layout.activity_create_instance);
-        spGame = findViewById(R.id.sp_game);
-        spVer = findViewById(R.id.sp_ver);
-        etName = findViewById(R.id.et_name);
-        etMem = findViewById(R.id.et_mem);
+        dots = new TextView[]{
+                findViewById(R.id.dot0), findViewById(R.id.dot1),
+                findViewById(R.id.dot2), findViewById(R.id.dot3)
+        };
+        btnPrev = findViewById(R.id.btn_prev);
+        btnNext = findViewById(R.id.btn_next);
+
         findViewById(R.id.btn_back).setOnClickListener(v -> finish());
-        findViewById(R.id.btn_create).setOnClickListener(v -> doCreate());
-
-        loadGames();
-        loadVersions();
-    }
-
-    private void loadGames() {
-        ApiClient.getGames(new ApiClient.ApiCallback() {
-            @Override
-            public void onSuccess(JSONObject resp) {
-                parseInto(resp, games);
-                runOnUiThread(() -> {
-                    ArrayAdapter<Game> a = new ArrayAdapter<>(CreateInstanceActivity.this,
-                            android.R.layout.simple_spinner_item, games);
-                    a.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                    spGame.setAdapter(a);
-                });
-            }
-
-            @Override
-            public void onError(String e) {
-                runOnUiThread(() -> Toast.makeText(CreateInstanceActivity.this, e, Toast.LENGTH_SHORT).show());
-            }
+        btnPrev.setOnClickListener(v -> {
+            if (step > 0) showStep(step - 1);
         });
+        btnNext.setOnClickListener(v -> onNext());
+
+        showStep(0);
     }
 
-    private void loadVersions() {
-        ApiClient.getGameVersions(new ApiClient.ApiCallback() {
-            @Override
-            public void onSuccess(JSONObject resp) {
-                parseInto(resp, vers);
-                runOnUiThread(() -> {
-                    ArrayAdapter<Game> a = new ArrayAdapter<>(CreateInstanceActivity.this,
-                            android.R.layout.simple_spinner_item, vers);
-                    a.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                    spVer.setAdapter(a);
-                });
-            }
-
-            @Override
-            public void onError(String e) {
-                runOnUiThread(() -> Toast.makeText(CreateInstanceActivity.this, e, Toast.LENGTH_SHORT).show());
-            }
-        });
-    }
-
-    private void parseInto(JSONObject resp, List<Game> target) {
-        target.clear();
-        JSONArray arr = Json.toArray(resp.opt("data"));
-        if (arr != null) {
-            for (int i = 0; i < arr.length(); i++) {
-                try {
-                    target.add(Game.from(arr.getJSONObject(i)));
-                } catch (Exception ignore) {
-                }
-            }
+    private void showStep(int idx) {
+        step = idx;
+        Fragment f;
+        switch (idx) {
+            case 0: f = new StepGameFragment(); break;
+            case 1: f = new StepVersionFragment(); break;
+            case 2: f = new StepSpecFragment(); break;
+            default: f = new StepConfirmFragment(); break;
         }
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.container, f).commit();
+        updateIndicator();
+        updateNav();
+    }
+
+    private void updateIndicator() {
+        for (int i = 0; i < TOTAL; i++) {
+            dots[i].setBackgroundResource(i == step
+                    ? R.drawable.bg_step_dot_active
+                    : R.drawable.bg_step_dot_inactive);
+        }
+    }
+
+    private void updateNav() {
+        btnPrev.setVisibility(step == 0 ? View.GONE : View.VISIBLE);
+        btnNext.setText(step == TOTAL - 1 ? "创建实例" : "下一步");
+    }
+
+    private void onNext() {
+        if (!validateStep(step)) return;
+        if (step == TOTAL - 1) {
+            doCreate();
+        } else {
+            showStep(step + 1);
+        }
+    }
+
+    private boolean validateStep(int s) {
+        switch (s) {
+            case 0:
+                if (selGameId == null || selGameId.isEmpty()) {
+                    toast("请选择一个游戏");
+                    return false;
+                }
+                break;
+            case 1:
+                if (selVersionId == null || selVersionId.isEmpty()) {
+                    toast("请选择分类与版本");
+                    return false;
+                }
+                break;
+            case 2:
+                if (selItemId == null || selItemId.isEmpty()) {
+                    toast("请选择一个规格");
+                    return false;
+                }
+                break;
+        }
+        return true;
     }
 
     private void doCreate() {
-        String name = etName.getText().toString().trim();
+        if (submitting) return;
+        String name = selName == null ? "" : selName;
         if (name.isEmpty()) {
-            Toast.makeText(this, "请填写实例名称", Toast.LENGTH_SHORT).show();
+            // 允许无名称创建（服务端可能自动命名），但给出提示更友好
+            toast("请填写实例名称");
             return;
         }
+        submitting = true;
+        btnNext.setEnabled(false);
+        btnPrev.setEnabled(false);
+
         Map<String, String> p = new HashMap<>();
+        p.put("item_id", selItemId);
+        p.put("version_id", selVersionId);
         p.put("name", name);
-        if (!games.isEmpty()) {
-            Game g = games.get(spGame.getSelectedItemPosition());
-            p.put("game_id", g.id);
-            p.put("game", g.id);
-        }
-        if (!vers.isEmpty()) {
-            Game v = vers.get(spVer.getSelectedItemPosition());
-            p.put("version", v.version);
-        }
-        String mem = etMem.getText().toString().trim();
-        if (!mem.isEmpty()) p.put("memory", mem);
 
         ApiClient.createInstance(p, new ApiClient.ApiCallback() {
             @Override
@@ -138,8 +152,17 @@ public class CreateInstanceActivity extends AppCompatActivity {
 
             @Override
             public void onError(String e) {
-                runOnUiThread(() -> Toast.makeText(CreateInstanceActivity.this, e, Toast.LENGTH_SHORT).show());
+                runOnUiThread(() -> {
+                    Toast.makeText(CreateInstanceActivity.this, e, Toast.LENGTH_SHORT).show();
+                    submitting = false;
+                    btnNext.setEnabled(true);
+                    btnPrev.setEnabled(true);
+                });
             }
         });
+    }
+
+    private void toast(String msg) {
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
 }
