@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#0D1117">
+
+    <TextView
+        android:id="@+id/tv_terminal_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:text="状态：连接中…"
+        android:textSize="12sp"
+        android:textColor="@color/primaryLight" />
+
+    <ScrollView
+        android:id="@+id/scroll_terminal"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="8dp">
+
+        <TextView
+            android:id="@+id/tv_terminal_log"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#C9D1D9"
+            android:textSize="12sp"
+            android:fontFamily="monospace"
+            android:text="" />
+    </ScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp">
+
+        <EditText
+            android:id="@+id/et_terminal_cmd"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="输入命令，如 say hello"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#666"
+            android:inputType="text"
+            android:imeOptions="actionSend" />
+
+        <Button
+            android:id="@+id/btn_terminal_send"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="发送" />
+    </LinearLayout>
+</LinearLayout>
