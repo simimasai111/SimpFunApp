@@ -77,4 +77,28 @@ public final class Json {
         }
         return null;
     }
+
+    /** 取字符串（字段缺失或 null 时回退默认值），比 JSONObject.optString 更稳健 */
+    public static String optString(JSONObject o, String key, String def) {
+        if (o == null || !o.has(key) || o.isNull(key)) return def == null ? "" : def;
+        try {
+            return o.getString(key);
+        } catch (Exception e) {
+            return def == null ? "" : def;
+        }
+    }
+
+    /** 取布尔（带默认值），兼容整数 0/1 表示 */
+    public static boolean optBool(JSONObject o, boolean def, String key) {
+        if (o == null || !o.has(key) || o.isNull(key)) return def;
+        try {
+            return o.getBoolean(key);
+        } catch (Exception e) {
+            try {
+                return o.getInt(key) != 0;
+            } catch (Exception e2) {
+                return def;
+            }
+        }
+    }
 }

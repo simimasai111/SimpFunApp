@@ -51,7 +51,8 @@ public class ShopActivity extends AppCompatActivity {
             @Override
             public void onSuccess(JSONObject resp) {
                 List<ShopItem> parsed = new ArrayList<>();
-                JSONArray arr = Json.toArray(resp.opt("data"));
+                JSONArray arr = resp.optJSONArray("list");
+                if (arr == null) arr = resp.optJSONArray("data");
                 if (arr != null) {
                     for (int i = 0; i < arr.length(); i++) {
                         try {
@@ -81,9 +82,9 @@ public class ShopActivity extends AppCompatActivity {
     private void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
         ShopItem item = items.get(pos);
         new AlertDialog.Builder(this)
-                .setTitle(item.name)
-                .setMessage((item.desc.isEmpty() ? "" : item.desc + "\n") +
-                        "价格：" + item.price + (item.diamond > 0 ? "（含 " + item.diamond + "）" : ""))
+                .setTitle(item.spec.isEmpty() ? ("套餐 #" + item.id) : item.spec)
+                .setMessage((item.description.isEmpty() ? "" : item.description + "\n") +
+                        "价格：" + item.point + " 积分")
                 .setPositiveButton("购买", (d, w) -> buy(item))
                 .setNegativeButton("取消", null)
                 .show();
@@ -91,9 +92,9 @@ public class ShopActivity extends AppCompatActivity {
 
     private void buy(ShopItem item) {
         Map<String, String> p = new HashMap<>();
-        p.put("id", item.id);
-        p.put("goods_id", item.id);
-        p.put("product_id", item.id);
+        p.put("id", String.valueOf(item.id));
+        p.put("goods_id", String.valueOf(item.id));
+        p.put("product_id", String.valueOf(item.id));
         ApiClient.shopBuy(p, new ApiClient.ApiCallback() {
             @Override
             public void onSuccess(JSONObject r) {

@@ -81,10 +81,8 @@ public class LoginActivity extends AppCompatActivity {
                 }
                 ApiClient.setToken(token);
                 prefs.saveToken(token);
-                String uname = data != null ? data.optString("username", "") : "";
-                if (uname.isEmpty()) uname = user;
-                String uid = data != null ? data.optString("uid", "") : "";
-                prefs.saveUser(uname, uid);
+                // 登录响应不含用户名/uid 字段（token 在根级别），直接使用表单输入的用户名
+                prefs.saveUser(user, "");
                 startMain();
             }
 

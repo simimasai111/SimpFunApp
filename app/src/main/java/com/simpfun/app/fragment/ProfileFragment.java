@@ -14,7 +14,7 @@ import androidx.fragment.app.Fragment;
 
 import com.simpfun.app.R;
 import com.simpfun.app.api.ApiClient;
-import com.simpfun.app.util.PrefsHelper;
+import com.simpfun.app.util.Prefs;
 
 import org.json.JSONObject;
 
@@ -24,32 +24,30 @@ import org.json.JSONObject;
  */
 public class ProfileFragment extends Fragment {
 
-    private TextView tvUser, tvUid, tvPoints, tvDiamond, tvVerified, tvQq, tvRaw;
+    private TextView tvUser, tvUid, tvPoints, tvDiamond, tvVerified, tvRaw;
     private Button btnRefresh, btnLogout;
-    private PrefsHelper prefs;
+    private Prefs prefs;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_profile, container, false);
-        prefs = new PrefsHelper(requireContext());
+        prefs = new Prefs(requireContext());
 
-        tvUser = root.findViewById(R.id.tv_user);
-        tvUid = root.findViewById(R.id.tv_uid);
-        tvPoints = root.findViewById(R.id.tv_points);
-        tvDiamond = root.findViewById(R.id.tv_diamond);
-        tvVerified = root.findViewById(R.id.tv_verified);
-        tvQq = root.findViewById(R.id.tv_qq); // 可能没有这个 TextView，容错处理
-        if (tvQq == null) tvQq = new TextView(requireContext());
+        tvUser = root.findViewById(R.id.tv_p_user);
+        tvUid = root.findViewById(R.id.tv_p_uid);
+        tvPoints = root.findViewById(R.id.tv_p_points);
+        tvDiamond = root.findViewById(R.id.tv_p_diamond);
+        tvVerified = root.findViewById(R.id.tv_p_verified);
         tvRaw = root.findViewById(R.id.tv_p_raw);
 
-        btnRefresh = root.findViewById(R.id.btn_refresh_profile);
-        btnLogout = root.findViewById(R.id.btn_logout);
+        btnRefresh = root.findViewById(R.id.btn_p_refresh);
+        btnLogout = root.findViewById(R.id.btn_p_logout);
 
         btnRefresh.setOnClickListener(v -> loadProfile());
         btnLogout.setOnClickListener(v -> {
-            prefs.clearToken();
+            prefs.clear();
             Toast.makeText(getContext(), "已退出登录", Toast.LENGTH_SHORT).show();
             requireActivity().finish();
         });
@@ -86,7 +84,6 @@ public class ProfileFragment extends Fragment {
                     tvPoints.setText(String.valueOf(points));
                     tvDiamond.setText(String.valueOf(diamond));
                     tvVerified.setText(verified ? "已认证" : "未认证");
-                    if (tvQq != null && qq > 0) tvQq.setText(String.valueOf(qq));
                     // 完整原始响应用于诊断
                     tvRaw.setText(resp.toString());
                     btnRefresh.setEnabled(true);

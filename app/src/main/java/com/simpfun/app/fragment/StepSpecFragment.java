@@ -5,7 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
-import android.widget.RecyclerView;
+import androidx.recyclerview.widget.RecyclerView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -37,8 +37,8 @@ public class StepSpecFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inf, @Nullable ViewGroup vg, @Nullable Bundle si) {
         View root = inf.inflate(R.layout.fragment_step_spec, vg, false);
-        rv = root.findViewById(R.id.rv_step_items);
-        pb = root.findViewById(R.id.pb_step);
+        rv = root.findViewById(R.id.rv);
+        pb = root.findViewById(R.id.pb);
         adapter = new SelectAdapter();
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
         rv.setAdapter(adapter);
@@ -109,7 +109,7 @@ public class StepSpecFragment extends Fragment {
 
     private void showEmptyDialog(String raw) {
         new android.app.AlertDialog.Builder(requireContext())
-                .title("该版本暂无可选规格")
+                .setTitle("该版本暂无可选规格")
                 .setMessage("原始响应:\n" + (raw.length() > 500 ? raw.substring(0, 500) + "..." : raw))
                 .setPositiveButton("确定", null)
                 .show();

@@ -5,7 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
-import android.widget.RecyclerView;
+import androidx.recyclerview.widget.RecyclerView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -37,8 +37,8 @@ public class StepGameFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inf, @Nullable ViewGroup vg, @Nullable Bundle si) {
         View root = inf.inflate(R.layout.fragment_step_game, vg, false);
-        rv = root.findViewById(R.id.rv_step_items);
-        pb = root.findViewById(R.id.pb_step);
+        rv = root.findViewById(R.id.rv);
+        pb = root.findViewById(R.id.pb);
         adapter = new SelectAdapter();
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
         rv.setAdapter(adapter);

@@ -30,6 +30,11 @@ public class SelectAdapter extends RecyclerView.Adapter<SelectAdapter.VH> {
         this.callback = callback;
     }
 
+    /** 无回调构造：仅用于单选展示，选中项通过 getSelectedItem() 读取 */
+    public SelectAdapter() {
+        this(null);
+    }
+
     public void setData(List<SelectItem> data) {
         items.clear();
         if (data != null) items.addAll(data);
@@ -43,6 +48,14 @@ public class SelectAdapter extends RecyclerView.Adapter<SelectAdapter.VH> {
 
     public String getSelectedId() {
         return selectedId;
+    }
+
+    /** 返回当前选中项（按 selectedId 匹配），未选中返回 null */
+    public SelectItem getSelectedItem() {
+        for (SelectItem it : items) {
+            if (it.id.equals(selectedId)) return it;
+        }
+        return null;
     }
 
     @NonNull
