@@ -154,7 +154,7 @@ public class BackupFragment extends Fragment {
             h.name.setText(b.name);
             h.meta.setText((b.time.isEmpty() ? "" : b.time + "  ") + b.size + " B");
             h.btn.setText("回档");
-            h.btn.setOnClickListener(v -> onRollback.accept(b));
+            h.btn.setOnClickListener(v -> onRollback.call(b));
         }
 
         @Override

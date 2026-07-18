@@ -411,9 +411,9 @@ public class FileFragment extends Fragment {
             if (!f.isDir) meta.append(f.size).append(" B");
             if (!f.time.isEmpty()) meta.append("  ").append(f.time);
             h.meta.setText(meta.toString());
-            h.itemView.setOnClickListener(v -> onClick.accept(f));
+            h.itemView.setOnClickListener(v -> onClick.call(f));
             h.itemView.setOnLongClickListener(v -> {
-                onLong.accept(f);
+                onLong.call(f);
                 return true;
             });
         }
