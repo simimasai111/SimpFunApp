@@ -19,6 +19,7 @@ public class InstanceDetail {
     public int ram;
     public int disk;
     public int point;
+    public int versionId;
     public String areaGrade = "";
     public String ip = "";
     public String port = "";
@@ -55,6 +56,7 @@ public class InstanceDetail {
             d.gameName = Json.optString(gi, "game_name");
             d.kindName = Json.optString(gi, "kind_name");
             d.versionName = Json.optString(gi, "version_name");
+            d.versionId = Json.optInt(gi, 0, "version_id");
         }
         JSONObject da = Json.optObject(o, "default_allocation");
         if (da != null) {

@@ -1,5 +1,6 @@
 package com.simpfun.app.fragment;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
