@@ -86,7 +86,7 @@ public class StepSpecFragment extends Fragment {
                     pb.setVisibility(View.GONE);
                     rv.setVisibility(View.VISIBLE);
                     if (items.isEmpty()) {
-                        Toast.makeText(getContext(), "该版本暂无可选规格", Toast.LENGTH_SHORT).show();
+                        ((CreateInstanceActivity) requireActivity()).showRawDialog(resp);
                     }
                 });
             }

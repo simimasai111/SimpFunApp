@@ -1,9 +1,11 @@
 package com.simpfun.app;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -164,5 +166,21 @@ public class CreateInstanceActivity extends AppCompatActivity {
 
     private void toast(String msg) {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+    }
+
+    /** 拉到空数据时弹出完整原始响应，便于用户复制反馈以对齐字段 */
+    public void showRawDialog(JSONObject resp) {
+        AlertDialog.Builder b = new AlertDialog.Builder(this);
+        b.setTitle("原始响应（请复制发我以对齐字段）");
+        TextView tv = new TextView(this);
+        tv.setText(resp == null ? "(null)" : resp.toString());
+        tv.setTextIsSelectable(true);
+        tv.setPadding(40, 30, 40, 30);
+        tv.setTextSize(11);
+        ScrollView sv = new ScrollView(this);
+        sv.addView(tv);
+        b.setView(sv);
+        b.setPositiveButton(android.R.string.ok, null);
+        b.show();
     }
 }

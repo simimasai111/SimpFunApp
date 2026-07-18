@@ -75,7 +75,8 @@ public class ProfileFragment extends Fragment {
                     tvPoints.setText(String.valueOf(points));
                     tvDiamond.setText(String.valueOf(diamond));
                     tvVerified.setText(verified ? "已认证" : "未认证");
-                    tvRaw.setText(fd.toString());
+                    // 显示完整响应，便于对齐全字段（若字段为空请把此内容发回）
+                    tvRaw.setText(resp.toString());
                     btnRefresh.setEnabled(true);
                 });
             }
@@ -83,6 +84,7 @@ public class ProfileFragment extends Fragment {
             @Override
             public void onError(String e) {
                 requireActivity().runOnUiThread(() -> {
+                    tvRaw.setText(e);
                     Toast.makeText(getContext(), e, Toast.LENGTH_SHORT).show();
                     btnRefresh.setEnabled(true);
                 });

@@ -72,6 +72,9 @@ public class StepGameFragment extends Fragment {
                     adapter.setSelectedId(sel);
                     pb.setVisibility(View.GONE);
                     rv.setVisibility(View.VISIBLE);
+                    if (items.isEmpty()) {
+                        ((CreateInstanceActivity) requireActivity()).showRawDialog(resp);
+                    }
                 });
             }
 
