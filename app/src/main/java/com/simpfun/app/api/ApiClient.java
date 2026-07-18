@@ -13,6 +13,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.net.URLEncoder;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -54,6 +55,10 @@ public final class ApiClient {
 
     public static void post(String endpoint, Map<String, String> params, ApiCallback cb) {
         request("POST", endpoint, params, cb);
+    }
+
+    public static void put(String endpoint, Map<String, String> params, ApiCallback cb) {
+        request("PUT", endpoint, params, cb);
     }
 
     private static void request(final String method, final String endpoint,
@@ -159,8 +164,8 @@ public final class ApiClient {
         post("/api/ins/create", params, cb);
     }
 
-    public static void reinstall(String insId, ApiCallback cb) {
-        get("/api/ins/" + insId + "/reinstall", cb);
+    public static void reinstall(String insId, Map<String, String> params, ApiCallback cb) {
+        post("/api/ins/" + insId + "/reinstall", params, cb);
     }
 
     public static void renameInstance(String insId, Map<String, String> params, ApiCallback cb) {
@@ -198,11 +203,11 @@ public final class ApiClient {
 
     // ===================== 文件管理 =====================
     public static void fileList(String insId, String dir, ApiCallback cb) {
-        get("/api/ins/" + insId + "/file/list?file_dir=" + enc(dir == null ? "" : dir), cb);
+        get("/api/ins/" + insId + "/file/list?path=" + enc(dir == null || dir.isEmpty() ? "/" : dir), cb);
     }
 
-    public static void fileFetch(String insId, String dir, ApiCallback cb) {
-        get("/api/ins/" + insId + "/file/fetch?file_dir=" + enc(dir == null ? "" : dir), cb);
+    public static void fileFetch(String insId, String path, ApiCallback cb) {
+        get("/api/ins/" + insId + "/file/fetch?path=" + enc(path == null ? "" : path), cb);
     }
 
     public static void fileSave(String insId, Map<String, String> params, ApiCallback cb) {
@@ -221,12 +226,19 @@ public final class ApiClient {
         post("/api/ins/" + insId + "/file/delete", params, cb);
     }
 
-    public static void fileArchive(String insId, String dir, ApiCallback cb) {
-        get("/api/ins/" + insId + "/file/archive?file_dir=" + enc(dir == null ? "" : dir), cb);
+    /** 下载文件直链：GET /file/download?path= */
+    public static void fileDownload(String insId, String path, ApiCallback cb) {
+        get("/api/ins/" + insId + "/file/download?path=" + enc(path == null ? "" : path), cb);
     }
 
-    public static void fileUploadUrl(String insId, String dir, ApiCallback cb) {
-        get("/api/ins/" + insId + "/file/upload?file_dir=" + enc(dir == null ? "" : dir), cb);
+    /** 上传直链：GET /file/upload */
+    public static void fileUploadUrl(String insId, ApiCallback cb) {
+        get("/api/ins/" + insId + "/file/upload", cb);
+    }
+
+    /** 压缩：POST /file/archive {root, files(JSON数组), format} */
+    public static void fileArchive(String insId, Map<String, String> params, ApiCallback cb) {
+        post("/api/ins/" + insId + "/file/archive", params, cb);
     }
 
     // ===================== 备份 / 回档 =====================
@@ -239,7 +251,9 @@ public final class ApiClient {
     }
 
     public static void rollback(String insId, String backupId, ApiCallback cb) {
-        get("/api/ins/" + insId + "/rollback?backup_id=" + enc(backupId == null ? "" : backupId), cb);
+        Map<String, String> p = new HashMap<>();
+        p.put("backup_id", backupId);
+        put("/api/ins/" + insId + "/backup", p, cb);
     }
 
     // ===================== 商店 / 充值 =====================
@@ -251,8 +265,12 @@ public final class ApiClient {
         post("/api/shop/confirmation", params, cb);
     }
 
-    public static void recharge(ApiCallback cb) {
-        get("/api/recharge", cb);
+    public static void recharge(Map<String, String> params, ApiCallback cb) {
+        post("/api/recharge", params, cb);
+    }
+
+    public static void payWebMeta(ApiCallback cb) {
+        get("/api/pay/web/meta", cb);
     }
 
     public static void payWebCreate(Map<String, String> params, ApiCallback cb) {

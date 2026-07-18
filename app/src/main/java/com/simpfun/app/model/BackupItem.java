@@ -15,9 +15,10 @@ public class BackupItem {
     public static BackupItem from(JSONObject o) {
         BackupItem b = new BackupItem();
         b.raw = o;
-        b.id = Json.pick(o, "backup_id", "id", "bid", "uuid", "file_id");
-        b.name = Json.pick(o, "backup_name", "name", "filename", "file_name", "title");
-        b.time = Json.pick(o, "time", "create_time", "created", "date", "backup_time");
+        b.id = Json.pick(o, "id", "backup_id", "bid", "uuid", "file_id");
+        // 真实接口字段为 tag（备份标签），如「重装时系统生成备份」
+        b.name = Json.pick(o, "tag", "backup_name", "name", "filename", "file_name", "title");
+        b.time = Json.pick(o, "valid_time", "time", "create_time", "created", "date", "backup_time");
         b.size = Json.pickLong(o, 0, "size", "file_size", "bytes");
         return b;
     }

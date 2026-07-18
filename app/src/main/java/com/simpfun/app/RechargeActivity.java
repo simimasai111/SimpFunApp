@@ -37,7 +37,7 @@ public class RechargeActivity extends AppCompatActivity {
     }
 
     private void loadInfo() {
-        ApiClient.recharge(new ApiClient.ApiCallback() {
+        ApiClient.payWebMeta(new ApiClient.ApiCallback() {
             @Override
             public void onSuccess(JSONObject resp) {
                 JSONObject d = resp.optJSONObject("data");
@@ -59,7 +59,9 @@ public class RechargeActivity extends AppCompatActivity {
             return;
         }
         Map<String, String> p = new HashMap<>();
-        p.put("money", money);
+        p.put("item", money);
+        p.put("num", "1");
+        p.put("method", "alipay");
         ApiClient.payWebCreate(p, new ApiClient.ApiCallback() {
             @Override
             public void onSuccess(JSONObject resp) {

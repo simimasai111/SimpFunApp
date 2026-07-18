@@ -67,11 +67,16 @@ public class WsClient {
     }
 
     public void connect() {
-        Request req = new Request.Builder().url(socketUrl).build();
+        // 简幻欢/Pterodactyl Wings：鉴权 JWT 必须作为 ?token= 查询参数放在 WS URL 上，
+        // 连接成功后守护进程会自动下发 "auth success"（无需再发 auth 事件）。
+        String url = socketUrl;
+        if (token != null && !token.isEmpty()) {
+            url += (url.contains("?") ? "&" : "?") + "token=" + token;
+        }
+        Request req = new Request.Builder().url(url).build();
         ws = http.newWebSocket(req, new WebSocketListener() {
             @Override
             public void onOpen(WebSocket webSocket, Response response) {
-                send("auth", token);
                 ui.post(listener::onOpen);
             }
 
@@ -154,7 +159,9 @@ public class WsClient {
     }
 
     public void reauth() {
-        send("auth", token);
+        // token 以 URL 参数形式鉴权，刷新后需重连
+        close();
+        connect();
     }
 
     /** 强制停止服务器进程 */

@@ -63,7 +63,7 @@ public class BackupFragment extends Fragment {
             @Override
             public void onSuccess(JSONObject resp) {
                 List<BackupItem> parsed = new ArrayList<>();
-                JSONArray arr = Json.toArray(resp.opt("data"));
+                JSONArray arr = Json.toArray(resp);
                 if (arr != null) {
                     for (int i = 0; i < arr.length(); i++) {
                         try {

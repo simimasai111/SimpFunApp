@@ -110,7 +110,7 @@ public class FileFragment extends Fragment {
 
     private List<FileItem> parseList(JSONObject resp) {
         List<FileItem> out = new ArrayList<>();
-        JSONArray arr = Json.toArray(resp.opt("data"));
+        JSONArray arr = Json.toArray(resp);
         if (arr != null) {
             for (int i = 0; i < arr.length(); i++) {
                 try {
@@ -181,8 +181,8 @@ public class FileFragment extends Fragment {
                 .setView(et)
                 .setPositiveButton("保存", (d, w) -> {
                     Map<String, String> p = new HashMap<>();
-                    p.put("file_dir", path);
-                    p.put("file_body", et.getText().toString());
+                    p.put("path", path);
+                    p.put("content", et.getText().toString());
                     ApiClient.fileSave(insId, p, new ApiClient.ApiCallback() {
                         @Override
                         public void onSuccess(JSONObject r) {
@@ -209,8 +209,8 @@ public class FileFragment extends Fragment {
                     String newName = et.getText().toString().trim();
                     if (newName.isEmpty()) return;
                     Map<String, String> p = new HashMap<>();
-                    p.put("old_file_dir", joinDir(currentDir, f.name));
-                    p.put("new_file_dir", joinDir(currentDir, newName));
+                    p.put("origin", joinDir(currentDir, f.name));
+                    p.put("target", joinDir(currentDir, newName));
                     ApiClient.fileRename(insId, p, cb("已重命名"));
                 })
                 .setNegativeButton("取消", null)
@@ -222,7 +222,7 @@ public class FileFragment extends Fragment {
                 .setTitle("删除 " + f.name + " ?")
                 .setPositiveButton("删除", (d, w) -> {
                     Map<String, String> p = new HashMap<>();
-                    p.put("file_dir", joinDir(currentDir, f.name));
+                    p.put("list", "[\"" + joinDir(currentDir, f.name) + "\"]");
                     ApiClient.fileDelete(insId, p, cb("已删除"));
                 })
                 .setNegativeButton("取消", null)
@@ -230,7 +230,7 @@ public class FileFragment extends Fragment {
     }
 
     private void download(FileItem f) {
-        ApiClient.fileArchive(insId, joinDir(currentDir, f.name), new ApiClient.ApiCallback() {
+        ApiClient.fileDownload(insId, joinDir(currentDir, f.name), new ApiClient.ApiCallback() {
             @Override
             public void onSuccess(JSONObject resp) {
                 JSONObject d = resp.optJSONObject("data");
@@ -273,8 +273,9 @@ public class FileFragment extends Fragment {
                     String name = et.getText().toString().trim();
                     if (name.isEmpty()) return;
                     Map<String, String> p = new HashMap<>();
-                    p.put("file_dir", joinDir(currentDir, name));
-                    p.put("type", dir ? "dir" : "file");
+                    p.put("mode", dir ? "dir" : "file");
+                    p.put("root", currentDir);
+                    p.put("name", name);
                     ApiClient.fileCreate(insId, p, cb(dir ? "已创建目录" : "已创建文件"));
                 })
                 .setNegativeButton("取消", null)
@@ -283,7 +284,7 @@ public class FileFragment extends Fragment {
 
     private void doUpload(Uri uri) {
         if (uri == null) return;
-        ApiClient.fileUploadUrl(insId, currentDir, new ApiClient.ApiCallback() {
+        ApiClient.fileUploadUrl(insId, new ApiClient.ApiCallback() {
             @Override
             public void onSuccess(JSONObject resp) {
                 JSONObject d = resp.optJSONObject("data");

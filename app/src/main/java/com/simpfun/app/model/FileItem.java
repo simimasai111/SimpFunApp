@@ -17,10 +17,11 @@ public class FileItem {
         FileItem f = new FileItem();
         f.raw = o;
         f.name = Json.pick(o, "name", "file_name", "filename", "title");
-        f.isDir = Json.pickBool(o, "is_dir", "directory", "dir", "isDir", "is_directory");
+        // 真实接口字段为 file(bool, true=文件)，目录 = !file
+        f.isDir = !Json.pickBool(o, "file", "is_file");
         f.size = Json.pickLong(o, 0, "size", "file_size", "bytes");
         f.mode = Json.pick(o, "mode", "permission", "chmod", "rights");
-        f.time = Json.pick(o, "time", "modify_time", "mtime", "date", "updated_at");
+        f.time = Json.pick(o, "modified_at", "time", "modify_time", "mtime", "date", "updated_at");
         return f;
     }
 

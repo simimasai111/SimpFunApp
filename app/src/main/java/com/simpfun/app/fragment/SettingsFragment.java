@@ -26,6 +26,7 @@ import java.util.Map;
  */
 public class SettingsFragment extends Fragment {
     private String insId = "";
+    private String detailVersionId = "";
     private TextView tvInfo;
 
     public SettingsFragment() {
@@ -47,7 +48,7 @@ public class SettingsFragment extends Fragment {
         btnStart.setOnClickListener(v -> power("start"));
         btnStop.setOnClickListener(v -> power("stop"));
         btnRestart.setOnClickListener(v -> power("restart"));
-        btnReinstall.setOnClickListener(v -> power("reinstall"));
+        btnReinstall.setOnClickListener(v -> showReinstall());
         btnRename.setOnClickListener(v -> showRename());
         btnDelete.setOnClickListener(v -> showDelete());
 
@@ -62,8 +63,9 @@ public class SettingsFragment extends Fragment {
                 JSONObject d = resp.optJSONObject("data");
                 StringBuilder sb = new StringBuilder();
                 if (d != null) {
+                    detailVersionId = d.optString("version_id", detailVersionId);
                     for (String k : new String[]{"instance_uuid", "uuid", "friendly_name", "name",
-                            "state", "status", "image", "memory", "version_name", "version", "port"}) {
+                            "state", "status", "image", "memory", "version_name", "version", "port", "version_id"}) {
                         if (d.has(k) && !d.isNull(k)) {
                             sb.append(k).append("：").append(d.optString(k)).append("\n");
                         }
@@ -96,6 +98,35 @@ public class SettingsFragment extends Fragment {
                         Toast.makeText(getContext(), e, Toast.LENGTH_SHORT).show());
             }
         });
+    }
+
+    private void showReinstall() {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("重装服务器？")
+                .setMessage("重装将用所选版本覆盖当前服务端文件，确定继续？")
+                .setPositiveButton("重装", (d, w) -> {
+                    Map<String, String> p = new HashMap<>();
+                    p.put("version_id", detailVersionId);
+                    p.put("diff", "0");
+                    p.put("save", "1");
+                    ApiClient.reinstall(insId, p, new ApiClient.ApiCallback() {
+                        @Override
+                        public void onSuccess(JSONObject r) {
+                            requireActivity().runOnUiThread(() -> {
+                                Toast.makeText(getContext(), "已提交重装", Toast.LENGTH_SHORT).show();
+                                loadDetail();
+                            });
+                        }
+
+                        @Override
+                        public void onError(String e) {
+                            requireActivity().runOnUiThread(() ->
+                                    Toast.makeText(getContext(), e, Toast.LENGTH_SHORT).show());
+                        }
+                    });
+                })
+                .setNegativeButton("取消", null)
+                .show();
     }
 
     private void showRename() {
