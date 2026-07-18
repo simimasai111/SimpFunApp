@@ -1,5 +1,7 @@
 package com.simpfun.app.fragment;
 
+import com.simpfun.app.CreateInstanceActivity;
+
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
